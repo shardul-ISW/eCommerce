@@ -1,11 +1,13 @@
 ﻿using ECommerce.Models.DTO.Auth;
-using ECommerce.Repositories;
+using ECommerce.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace ECommerce.Controllers
 {
+    [AllowAnonymous]
     [Route("auth")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -17,15 +19,16 @@ namespace ECommerce.Controllers
             this.authRepository = authRepository;
         }
 
+
         [HttpPost("buyer/register")]
         public async Task<IActionResult> RegisterBuyer([FromBody] BuyerRegisterRequestDto Dto)
         {
             string hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(Dto.Password);
 
             var newBuyer = Models.Domain.Buyer.Create(
-                name: Dto.Name, 
-                email: Dto.Email, 
-                passwordHash: hashedPassword, 
+                name: Dto.Name,
+                email: Dto.Email,
+                passwordHash: hashedPassword,
                 address: Dto.Address
                 );
 
@@ -67,7 +70,6 @@ namespace ECommerce.Controllers
 
             return Ok("Seller created.");
         }
-
 
         [HttpPost("buyer/login")]
         public async Task<IActionResult> LoginBuyer([FromBody] LoginRequestDto Dto)

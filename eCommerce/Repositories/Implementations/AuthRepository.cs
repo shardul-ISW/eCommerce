@@ -1,19 +1,20 @@
 ﻿using ECommerce.Data;
 using ECommerce.Models.Domain;
+using ECommerce.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace ECommerce.Repositories
+namespace ECommerce.Repositories.Implementations
 {
-    public class SQLAuthRepository : IAuthRepository
+    public class AuthRepository : IAuthRepository
     {
         private readonly ECommerceDbContext dbContext;
         private readonly IConfiguration configuration;
 
-        public SQLAuthRepository(ECommerceDbContext dbContext, IConfiguration configuration)
+        public AuthRepository(ECommerceDbContext dbContext, IConfiguration configuration)
         {
             this.dbContext = dbContext;
             this.configuration = configuration;

@@ -1,7 +1,6 @@
 ﻿using ECommerce.Models.Domain;
-using Microsoft.AspNetCore.Mvc;
 
-namespace ECommerce.Repositories
+namespace ECommerce.Repositories.Interfaces
 {
     public interface IAuthRepository
     {

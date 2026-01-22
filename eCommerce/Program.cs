@@ -1,21 +1,30 @@
+using ECommerce;
 using ECommerce.Data;
-using ECommerce.Repositories;
-using Microsoft.EntityFrameworkCore;
+using ECommerce.Mappings;
+using ECommerce.Repositories.Implementations;
+using ECommerce.Repositories.Interfaces;
+using ECommerce.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-////builder.Services.AddScoped<DbTransactionFilter>();
+builder.Services.AddScoped<DbTransactionFilter>();
 
 // Add services to the container.	
 builder.Services.AddControllers(options =>
 {
-    ////options.Filters.Add<DbTransactionFilter>();
+    options.Filters.Add<DbTransactionFilter>();
 });
 
-builder.Services.AddScoped<IAuthRepository, SQLAuthRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
+builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
+
+builder.Services.AddAutoMapper(cfg => { }, typeof(OrderMappingProfile));
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -37,10 +46,15 @@ builder.Services
     });
 
 builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser().Build());
+
+builder.Services.AddAuthorizationBuilder()
     .AddPolicy("BuyerOnly", policy => policy.RequireRole("Buyer"))
     .AddPolicy("SellerOnly", policy => policy.RequireRole("Seller"));
 
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -58,7 +72,7 @@ builder.Services.AddDbContext<ECommerceDbContext>(options =>
 
 
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole();   
+builder.Logging.AddConsole();
 
 var app = builder.Build();
 

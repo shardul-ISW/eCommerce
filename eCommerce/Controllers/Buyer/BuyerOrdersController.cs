@@ -1,5 +1,4 @@
 ﻿using ECommerce.Data;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.Controllers.Buyer
@@ -14,5 +13,7 @@ namespace ECommerce.Controllers.Buyer
         {
             this.dbContext = dbContext;
         }
+
+
     }
 }
