@@ -1,4 +1,4 @@
-﻿using ECommerce.Models.Domain;
+﻿using ECommerce.Models.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 

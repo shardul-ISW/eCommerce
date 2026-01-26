@@ -1,4 +1,4 @@
-﻿using ECommerce.Models.Domain;
+﻿using ECommerce.Models.Domain.Entities;
 
 namespace ECommerce.Repositories.Interfaces
 {

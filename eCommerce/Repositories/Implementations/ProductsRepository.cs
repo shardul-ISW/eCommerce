@@ -1,5 +1,6 @@
 ﻿using ECommerce.Data;
-using ECommerce.Models.Domain;
+using ECommerce.Models.Domain.Entities;
+using ECommerce.Models.Domain.Exceptions;
 using ECommerce.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,8 +15,8 @@ namespace ECommerce.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task<List<Product>> GetProductsAsync( 
-            IReadOnlyCollection<Guid>? sellerIds = null, 
+        public async Task<List<Product>> GetProductsAsync(
+            IReadOnlyCollection<Guid>? sellerIds = null,
             IReadOnlyCollection<Guid>? productIds = null
             )
         {
@@ -28,6 +29,25 @@ namespace ECommerce.Repositories.Implementations
                 query = query.Where(p => productIds.Contains(p.Id));
 
             return await query.ToListAsync();
+        }
+
+        public async Task CreateProductAsync(Product p)
+        {
+            try
+            {
+                await dbContext.AddAsync(p);
+                await dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw new DuplicateSkuException();
+            }
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await dbContext.SaveChangesAsync();
         }
     }
 }

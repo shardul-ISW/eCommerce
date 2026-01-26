@@ -1,17 +1,16 @@
 ﻿using ECommerce.Data;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace ECommerce
+namespace ECommerce.Services.Implementations
 {
     public sealed class DbTransactionFilter : IAsyncActionFilter
     {
         private readonly ECommerceDbContext _dbContext;
 
-        public DbTransactionFilter(ECommerceDbContext dbContext) { this._dbContext = dbContext; }
+        public DbTransactionFilter(ECommerceDbContext dbContext) { _dbContext = dbContext; }
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
-        {   
+        {
             // Don't start a transaction for GET requests. 
             if (context.HttpContext.Request.Method == HttpMethods.Get)
             {

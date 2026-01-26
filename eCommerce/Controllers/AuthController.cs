@@ -1,9 +1,7 @@
-﻿using ECommerce.Models.DTO.Auth;
+﻿using ECommerce.Models.DTO.Auth.Request;
 using ECommerce.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace ECommerce.Controllers
 {
@@ -25,22 +23,14 @@ namespace ECommerce.Controllers
         {
             string hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(Dto.Password);
 
-            var newBuyer = Models.Domain.Buyer.Create(
+            var newBuyer = Models.Domain.Entities.Buyer.Create(
                 name: Dto.Name,
                 email: Dto.Email,
                 passwordHash: hashedPassword,
                 address: Dto.Address
                 );
 
-            try
-            {
-                await authRepository.CreateBuyerAsync(newBuyer);
-            }
-            catch (DbUpdateException ex)
-                when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
-            {
-                return Conflict("Email already exists.");
-            }
+            await authRepository.CreateBuyerAsync(newBuyer);
 
             return Ok("Buyer created.");
         }
@@ -50,7 +40,7 @@ namespace ECommerce.Controllers
         {
             string hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(Dto.Password);
 
-            var newSeller = new Models.Domain.Seller
+            var newSeller = new Models.Domain.Entities.Seller
             {
                 Name = Dto.Name,
                 PasswordHash = hashedPassword,
@@ -58,15 +48,7 @@ namespace ECommerce.Controllers
                 Ban = Dto.Ban
             };
 
-            try
-            {
-                await authRepository.CreateSellerAsync(newSeller);
-            }
-            catch (DbUpdateException ex)
-                when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
-            {
-                return Conflict("Email already exists.");
-            }
+            await authRepository.CreateSellerAsync(newSeller);
 
             return Ok("Seller created.");
         }

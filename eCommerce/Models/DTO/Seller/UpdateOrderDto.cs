@@ -1,9 +1,9 @@
-﻿using ECommerce.Models.Domain;
+﻿using ECommerce.Models.Domain.Entities;
 
 namespace ECommerce.Models.DTO.Seller
 {
     public class UpdateOrderDto
     {
-        public required OrderStatus NewStatus { get; set; }
+        public required OrderStatus Status { get; set; }
     }
 }

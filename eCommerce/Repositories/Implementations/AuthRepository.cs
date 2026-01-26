@@ -1,5 +1,5 @@
 ﻿using ECommerce.Data;
-using ECommerce.Models.Domain;
+using ECommerce.Models.Domain.Exceptions;
 using ECommerce.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,29 +20,45 @@ namespace ECommerce.Repositories.Implementations
             this.configuration = configuration;
         }
 
-        public async Task CreateBuyerAsync(Buyer buyer)
-        {   
-            await dbContext.AddAsync(buyer);
-            await dbContext.SaveChangesAsync();
-        }
-
-        public async Task CreateSellerAsync(Seller seller)
+        public async Task CreateBuyerAsync(Models.Domain.Entities.Buyer buyer)
         {
-            await dbContext.AddAsync(seller);
-            await dbContext.SaveChangesAsync();
+            try
+            {
+                await dbContext.AddAsync(buyer);
+                await dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw new DuplicateEmailException();
+            }
         }
 
-        public async Task<Buyer?> GetBuyerIfValidCredentialsAsync(string email, string password)
-        {  
+        public async Task CreateSellerAsync(Models.Domain.Entities.Seller seller)
+        {
+            try
+            {
+                await dbContext.AddAsync(seller);
+                await dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw new DuplicateEmailException();
+            }
+        }
+
+        public async Task<Models.Domain.Entities.Buyer?> GetBuyerIfValidCredentialsAsync(string email, string password)
+        {
             var buyer = await dbContext.Buyers.FirstOrDefaultAsync(buyer => buyer.Email == email);
-            if(buyer != null && BCrypt.Net.BCrypt.EnhancedVerify(password, buyer.PasswordHash))
+            if (buyer != null && BCrypt.Net.BCrypt.EnhancedVerify(password, buyer.PasswordHash))
             {
                 return buyer;
             }
             return null;
         }
 
-        public async Task<Seller?> GetSellerIfValidCredentialsAsync(string email, string password)
+        public async Task<Models.Domain.Entities.Seller?> GetSellerIfValidCredentialsAsync(string email, string password)
         {
             var seller = await dbContext.Sellers.FirstOrDefaultAsync(seller => seller.Email == email);
             if (seller != null && BCrypt.Net.BCrypt.EnhancedVerify(password, seller.PasswordHash))

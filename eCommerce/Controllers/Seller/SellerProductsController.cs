@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
-using ECommerce.Models.Domain;
+using ECommerce.Models.Domain.Entities;
 using ECommerce.Models.DTO.Seller;
 using ECommerce.Repositories.Interfaces;
-using ECommerce.Services;
+using ECommerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Controllers.Seller
 {
@@ -50,19 +51,29 @@ namespace ECommerce.Controllers.Seller
         }
 
         [HttpPatch("{productId}")]
-        public async Task<IActionResult> Updateproduct([FromRoute] Guid productId, [FromBody] UpdateProductDto Dto)
+        public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, [FromBody] UpdateProductDto updateProductDto)
         {
             Product? product = (await productsRepository.GetProductsAsync(productIds: [productId], sellerIds: [sellerId])).FirstOrDefault();
 
             if (product is null) return NotFound();
 
-            // TODO: Add description and images update.
+            mapper.Map(updateProductDto, product);
 
-            product.CountInStock = Dto.NewCountInStock;
+            await productsRepository.SaveChangesAsync();
 
             return Ok();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> AddProduct([FromBody] AddProductDto addProductDto)
+        {
+            Product p = mapper.Map<Product>(addProductDto);
+            p.SellerId = sellerId;
+
+            await productsRepository.CreateProductAsync(p);
+
+            return Created();
+        }
 
     }
 }

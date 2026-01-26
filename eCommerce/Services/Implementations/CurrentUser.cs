@@ -1,6 +1,7 @@
-﻿using System.Security.Claims;
+﻿using ECommerce.Services.Interfaces;
+using System.Security.Claims;
 
-namespace ECommerce.Services
+namespace ECommerce.Services.Implementations
 {
     public sealed class CurrentUser : ICurrentUser
     {

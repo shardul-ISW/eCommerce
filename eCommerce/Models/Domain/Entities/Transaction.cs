@@ -1,29 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ECommerce.Models.Domain
+namespace ECommerce.Models.Domain.Entities
 {
     public enum TransactionStatus
     {
-        Success, Failed, Processing
+        Success, Failed, Processing, Rollback
     }
     public class Transaction : Entity
     {
-        public required Guid SellerId { get; set; }
-        public Seller Seller { get; set; }
+        public decimal? Amount { get; set; }
 
-        public required decimal Amount { get; set; }
-
-        public required TransactionStatus Status { get; set; }
+        public TransactionStatus? Status { get; set; }
     }
 
     public class TransactionConfiguration : EntityConfiguration<Transaction>
     {
         protected override void ConfigureEntity(EntityTypeBuilder<Transaction> builder)
         {
-            //Foreign Key SellerId
-            builder.HasOne(transaction => transaction.Seller).WithMany().HasForeignKey(transaction => transaction.SellerId).IsRequired();
-
             //Field: Amount Constraint: REQUIRED
             builder.Property(transaction => transaction.Amount).IsRequired();
 

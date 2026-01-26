@@ -1,9 +1,9 @@
 ﻿
 using AutoMapper;
-using ECommerce.Models.Domain;
+using ECommerce.Models.Domain.Entities;
 using ECommerce.Models.DTO.Seller;
 using ECommerce.Repositories.Interfaces;
-using ECommerce.Services;
+using ECommerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,7 +29,7 @@ namespace ECommerce.Controllers.Seller
         [HttpGet]
         public async Task<IActionResult> GetAllSellerOrders()
         {
-            List<Order> orders = await ordersRepository.GetOrdersAsync(sellerIds: [sellerId]);
+            List<Order> orders = await ordersRepository.GetOrdersAsync(new MandatoryUserIdArgument.Seller([sellerId]));
 
             var sellerOrderResponseDtos = new List<SellerOrderResponseDto>();
 
@@ -42,7 +42,7 @@ namespace ECommerce.Controllers.Seller
         [HttpGet("{orderId}")]
         public async Task<IActionResult> GetSellerOrderByOrderID([FromRoute] Guid orderId)
         {
-            Order? order = (await ordersRepository.GetOrdersAsync(orderIds: [orderId], sellerIds: [sellerId])).FirstOrDefault();
+            Order? order = (await ordersRepository.GetOrdersAsync(new MandatoryUserIdArgument.Seller([sellerId]), orderIds: [orderId])).FirstOrDefault();
 
             if (order is null) return NotFound();
 
@@ -51,15 +51,15 @@ namespace ECommerce.Controllers.Seller
         }
 
         [HttpPatch("{orderId}")]
-        public async Task<IActionResult> UpdateOrder([FromRoute] Guid orderId, [FromBody] UpdateOrderDto Dto)
+        public async Task<IActionResult> UpdateOrder([FromRoute] Guid orderId, [FromBody] UpdateOrderDto updateOrderDto)
         {
-            Order? order = (await ordersRepository.GetOrdersAsync(orderIds: [orderId], sellerIds: [sellerId])).FirstOrDefault();
+            Order? order = (await ordersRepository.GetOrdersAsync(new MandatoryUserIdArgument.Seller([sellerId]), orderIds: [orderId])).FirstOrDefault();
 
             if (order is null) return NotFound();
 
             // TODO: Transaction rollback if seller cancels order.
 
-            order.Status = Dto.NewStatus;
+            mapper.Map(updateOrderDto, order);
 
             return Ok();
         }

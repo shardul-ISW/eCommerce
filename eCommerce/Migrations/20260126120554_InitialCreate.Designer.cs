@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ECommerce.Migrations
 {
     [DbContext(typeof(ECommerceDbContext))]
-    [Migration("20260119203416_InitialCreate")]
+    [Migration("20260126120554_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace ECommerce.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Buyer", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Buyer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -56,7 +56,7 @@ namespace ECommerce.Migrations
                     b.ToTable("Buyers");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Cart", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Cart", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -74,7 +74,7 @@ namespace ECommerce.Migrations
                     b.ToTable("Carts");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.CartItem", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.CartItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -100,7 +100,7 @@ namespace ECommerce.Migrations
                     b.ToTable("CartItems");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Order", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -127,6 +127,9 @@ namespace ECommerce.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric");
+
                     b.Property<Guid>("TransactionId")
                         .HasColumnType("uuid");
 
@@ -141,17 +144,22 @@ namespace ECommerce.Migrations
                     b.HasIndex("TransactionId")
                         .IsUnique();
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", t =>
+                        {
+                            t.HasCheckConstraint("CK_Order_Total_Positive", "\"Total\" >= 0");
+
+                            t.HasCheckConstraint("CK_Ordered_Product_Count_Positive", "\"Count\" > 0");
+                        });
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Product", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("uuidv7()");
 
-                    b.Property<int>("CountInStock")
+                    b.Property<int?>("CountInStock")
                         .HasColumnType("integer");
 
                     b.Property<string>("Description")
@@ -160,14 +168,14 @@ namespace ECommerce.Migrations
                     b.Property<byte[]>("Images")
                         .HasColumnType("bytea");
 
-                    b.Property<bool>("IsListed")
+                    b.Property<bool?>("IsListed")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal?>("Price")
                         .HasColumnType("numeric");
 
                     b.Property<Guid>("SellerId")
@@ -192,7 +200,7 @@ namespace ECommerce.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Seller", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Seller", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -223,7 +231,7 @@ namespace ECommerce.Migrations
                     b.ToTable("Sellers");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Transaction", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -233,40 +241,35 @@ namespace ECommerce.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
-                    b.Property<Guid>("SellerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SellerId");
-
                     b.ToTable("Transactions");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Cart", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Cart", b =>
                 {
-                    b.HasOne("ECommerce.Models.Domain.Buyer", "Buyer")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Buyer", "Buyer")
                         .WithOne("Cart")
-                        .HasForeignKey("ECommerce.Models.Domain.Cart", "BuyerId")
+                        .HasForeignKey("ECommerce.Models.Domain.Entities.Cart", "BuyerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Buyer");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.CartItem", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.CartItem", b =>
                 {
-                    b.HasOne("ECommerce.Models.Domain.Cart", "Cart")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ECommerce.Models.Domain.Product", "Product")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -277,29 +280,29 @@ namespace ECommerce.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Order", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Order", b =>
                 {
-                    b.HasOne("ECommerce.Models.Domain.Buyer", "Buyer")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Buyer", "Buyer")
                         .WithMany()
                         .HasForeignKey("BuyerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ECommerce.Models.Domain.Product", "Product")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ECommerce.Models.Domain.Seller", "Seller")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Seller", "Seller")
                         .WithMany()
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ECommerce.Models.Domain.Transaction", "Transaction")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Transaction", "Transaction")
                         .WithOne()
-                        .HasForeignKey("ECommerce.Models.Domain.Order", "TransactionId")
+                        .HasForeignKey("ECommerce.Models.Domain.Entities.Order", "TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -312,9 +315,9 @@ namespace ECommerce.Migrations
                     b.Navigation("Transaction");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Product", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Product", b =>
                 {
-                    b.HasOne("ECommerce.Models.Domain.Seller", "Seller")
+                    b.HasOne("ECommerce.Models.Domain.Entities.Seller", "Seller")
                         .WithMany("Products")
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -323,29 +326,18 @@ namespace ECommerce.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Transaction", b =>
-                {
-                    b.HasOne("ECommerce.Models.Domain.Seller", "Seller")
-                        .WithMany()
-                        .HasForeignKey("SellerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Seller");
-                });
-
-            modelBuilder.Entity("ECommerce.Models.Domain.Buyer", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Buyer", b =>
                 {
                     b.Navigation("Cart")
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Cart", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Cart", b =>
                 {
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("ECommerce.Models.Domain.Seller", b =>
+            modelBuilder.Entity("ECommerce.Models.Domain.Entities.Seller", b =>
                 {
                     b.Navigation("Products");
                 });

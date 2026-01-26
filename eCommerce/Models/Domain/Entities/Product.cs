@@ -1,27 +1,26 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.ComponentModel.DataAnnotations;
 
-namespace ECommerce.Models.Domain
+namespace ECommerce.Models.Domain.Entities
 {
     public class Product : Entity
     {
-        public required Guid SellerId { get; set; }
+        public Guid SellerId { get; set; }
         public Seller Seller { get; set; }
 
-        public required string Sku { get; set; }
+        public string? Sku { get; set; }
 
-        public required string Name { get; set; }
+        public string? Name { get; set; }
 
-        public required decimal Price { get; set; }
+        public decimal? Price { get; set; }
 
-        public required int CountInStock { get; set; }
+        public int? CountInStock { get; set; }
 
         public string? Description { get; set; }
 
         public byte[]? Images { get; set; }
 
-        public required bool IsListed { get; set; }
+        public bool? IsListed { get; set; }
     }
 
     public class ProductConfiguration : EntityConfiguration<Product>

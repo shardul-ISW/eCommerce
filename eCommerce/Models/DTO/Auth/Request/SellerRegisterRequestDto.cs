@@ -1,4 +1,4 @@
-﻿namespace ECommerce.Models.DTO.Auth
+﻿namespace ECommerce.Models.DTO.Auth.Request
 {
     public class SellerRegisterRequestDto
     {

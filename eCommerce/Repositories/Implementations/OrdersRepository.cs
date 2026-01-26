@@ -1,11 +1,8 @@
 ﻿using ECommerce.Data;
-using ECommerce.Models.Domain;
+using ECommerce.Models.Domain.Entities;
 using ECommerce.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using System.Diagnostics;
 
 namespace ECommerce.Repositories.Implementations
 {
@@ -19,23 +16,42 @@ namespace ECommerce.Repositories.Implementations
         }
 
         public async Task<List<Order>> GetOrdersAsync(
-            IReadOnlyCollection<Guid>? orderIds = null, 
-            IReadOnlyCollection<Guid>? sellerIds = null, 
+            MandatoryUserIdArgument endUserIds,
+            IReadOnlyCollection<Guid>? orderIds = null,
             IReadOnlyCollection<Guid>? productIds = null
             )
         {
             IQueryable<Order> query = dbContext.Orders;
 
+            query = endUserIds switch
+            {
+                MandatoryUserIdArgument.Seller s =>
+                    query.Where(o => s.SellerIds.Contains(o.SellerId)),
+
+                MandatoryUserIdArgument.Buyer b =>
+                    query.Where(o => b.BuyerIds.Contains(o.BuyerId)),
+
+                _ => throw new UnreachableException()
+            };
+
             if (orderIds is { Count: > 0 })
                 query = query.Where(o => orderIds.Contains(o.Id));
-
-            if (sellerIds is { Count: > 0 })
-                query = query.Where(o => sellerIds.Contains(o.SellerId));
 
             if (productIds is { Count: > 0 })
                 query = query.Where(o => productIds.Contains(o.ProductId));
 
-            return await query.ToListAsync();
+            return await query.Include(o => o.Product).ToListAsync();
+        }
+
+        public async Task CreateOrdersForTransaction(List<CartItem> cartItems, Buyer buyer, Transaction transaction)
+        {
+            foreach (var ci in cartItems)
+            {
+                Order o = Order.Create(buyer, ci, transaction);
+                await dbContext.AddAsync(o);
+            }
+
+            await dbContext.SaveChangesAsync();
         }
     }
 }

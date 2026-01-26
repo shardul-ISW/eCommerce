@@ -1,11 +1,13 @@
-using ECommerce;
 using ECommerce.Data;
 using ECommerce.Mappings;
+using ECommerce.Models.Domain.Exceptions;
 using ECommerce.Repositories.Implementations;
 using ECommerce.Repositories.Interfaces;
-using ECommerce.Services;
+using ECommerce.Services.Implementations;
+using ECommerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -23,8 +25,10 @@ builder.Services.AddControllers(options =>
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
 builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
-builder.Services.AddAutoMapper(cfg => { }, typeof(OrderMappingProfile));
+builder.Services.AddAutoMapper(cfg => { }, typeof(OrderMappingProfile), typeof(ProductMappingProfile));
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -95,16 +99,35 @@ app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
-        context.Response.StatusCode = 500;
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
         context.Response.ContentType = "application/problem+json";
 
-        await context.Response.WriteAsJsonAsync(new
+        if (exception is DomainException domainException)
         {
-            title = "Internal server error",
-            status = 500
-        });
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                title = "Business rule violation",
+                status = 400,
+                detail = domainException.Message
+            });
+        }
+
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                title = "Internal server error",
+                status = 500
+            });
+        }
     });
 });
+
 
 
 app.UseHttpsRedirection();

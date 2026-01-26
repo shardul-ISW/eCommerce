@@ -1,4 +1,4 @@
-﻿namespace ECommerce.Services
+﻿namespace ECommerce.Services.Interfaces
 {
     public interface ICurrentUser
     {

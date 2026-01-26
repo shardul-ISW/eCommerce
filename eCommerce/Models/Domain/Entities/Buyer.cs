@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ECommerce.Models.Domain
+namespace ECommerce.Models.Domain.Entities
 {   
     public class Buyer : Entity
     {

@@ -42,6 +42,19 @@ namespace ECommerce.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Transactions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "uuidv7()"),
+                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transactions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Carts",
                 columns: table => new
                 {
@@ -67,11 +80,11 @@ namespace ECommerce.Migrations
                     SellerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Sku = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric", nullable: false),
-                    CountInStock = table.Column<int>(type: "integer", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric", nullable: true),
+                    CountInStock = table.Column<int>(type: "integer", nullable: true),
                     Description = table.Column<string>(type: "text", nullable: true),
                     Images = table.Column<byte[]>(type: "bytea", nullable: true),
-                    IsListed = table.Column<bool>(type: "boolean", nullable: false)
+                    IsListed = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -80,26 +93,6 @@ namespace ECommerce.Migrations
                     table.CheckConstraint("CK_Product_Stock_Positive", "\"CountInStock\" >= 0");
                     table.ForeignKey(
                         name: "FK_Products_Sellers_SellerId",
-                        column: x => x.SellerId,
-                        principalTable: "Sellers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Transactions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "uuidv7()"),
-                    SellerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Transactions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Transactions_Sellers_SellerId",
                         column: x => x.SellerId,
                         principalTable: "Sellers",
                         principalColumn: "Id",
@@ -142,12 +135,15 @@ namespace ECommerce.Migrations
                     SellerId = table.Column<Guid>(type: "uuid", nullable: false),
                     TransactionId = table.Column<Guid>(type: "uuid", nullable: false),
                     Count = table.Column<int>(type: "integer", nullable: false),
+                    Total = table.Column<decimal>(type: "numeric", nullable: false),
                     Address = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.CheckConstraint("CK_Order_Total_Positive", "\"Total\" >= 0");
+                    table.CheckConstraint("CK_Ordered_Product_Count_Positive", "\"Count\" > 0");
                     table.ForeignKey(
                         name: "FK_Orders_Buyers_BuyerId",
                         column: x => x.BuyerId,
@@ -234,11 +230,6 @@ namespace ECommerce.Migrations
                 table: "Sellers",
                 column: "Email",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Transactions_SellerId",
-                table: "Transactions",
-                column: "SellerId");
         }
 
         /// <inheritdoc />
