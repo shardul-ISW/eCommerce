@@ -98,7 +98,7 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine(db.Database.CanConnect() ? "Database connection successful" : "Database connection failed");
 }
 
-app.UseCors();
+app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -141,10 +141,6 @@ app.UseExceptionHandler(errorApp =>
         }
     });
 });
-
-
-
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
