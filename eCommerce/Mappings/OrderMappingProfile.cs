@@ -20,7 +20,7 @@ namespace ECommerce.Mappings
 
             CreateMap<Order, BuyerOrderResponseDto>()
                 .ForMember(d => d.OrderId, o => o.MapFrom(s => s.Id))
-                .ForMember(d => d.OrderValue, o => o.MapFrom(s => s.Transaction.Amount))
+                .ForMember(d => d.OrderValue, o => o.MapFrom(s => s.Total))
                 .ForMember(d => d.ProductName, o => o.MapFrom(s => s.Product.Name))
                 .ForMember(d => d.ProductSku, o => o.MapFrom(s => s.Product.Sku))
                 .ForMember(d => d.ProductId, o => o.MapFrom(s => s.ProductId))

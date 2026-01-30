@@ -8,7 +8,7 @@
         public decimal Price { get; set; }
         public int CountInStock { get; set; }
         public string? Description { get; set; }
-        public byte[]? Images { get; set; }
+        public string? ImageUrl { get; set; }
         public int CountInCart { get; set; }
     }
 }

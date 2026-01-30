@@ -59,7 +59,7 @@ namespace ECommerce.Models.Domain.Entities
             //Foreign Key ProductId, BuyerId, SellerId, TransactionId
             builder.HasOne(order => order.Buyer).WithMany().HasForeignKey(order => order.BuyerId).IsRequired();
             builder.HasOne(order => order.Seller).WithMany().HasForeignKey(order => order.SellerId).IsRequired();
-            builder.HasOne(order => order.Transaction).WithOne().HasForeignKey<Order>(order => order.TransactionId).IsRequired();
+            builder.HasOne(order => order.Transaction).WithMany().HasForeignKey(order => order.TransactionId).IsRequired();
             builder.HasOne(order => order.Product).WithMany().HasForeignKey(order => order.ProductId).IsRequired();
 
             //Field:Address Constraint:REQUIRED

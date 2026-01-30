@@ -13,6 +13,6 @@
 
         public string? Description { get; set; }
 
-        public byte[]? Images { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }
