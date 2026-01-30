@@ -6,7 +6,7 @@ import apiClient from "~/axios_instance";
 import { useFetcher } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { Minus, Plus, ShoppingCart, Check } from "lucide-react"; // Assuming lucide-react is available
+import { Minus, Plus, ShoppingCart, Check } from "lucide-react";
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const productId: string = params.productId;
@@ -15,13 +15,16 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return { productDto };
 }
 
-export async function clientAction({ params, request }: Route.ClientActionArgs) {
+export async function clientAction({
+  params,
+  request,
+}: Route.ClientActionArgs) {
   const formData = await request.formData();
   const quantity = formData.get("quantity");
   const productId = params.productId;
 
   await apiClient.post(`/buyer/cart/${productId}?count=${quantity}`);
-  return { success: true };
+  return { success: true, addedQuantity: Number(quantity) };
 }
 
 export default function ProductDisplay({ loaderData }: Route.ComponentProps) {
@@ -29,9 +32,9 @@ export default function ProductDisplay({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const [quantity, setQuantity] = useState(1);
 
-  // Check if the fetcher is currently submitting
   const isSubmitting = fetcher.state !== "idle";
-  const isSuccess = fetcher.data?.success;
+  const isSuccess =
+    fetcher.data?.success && quantity === fetcher.data?.addedQuantity;
 
   const handleIncrement = () => {
     if (quantity < productDto.countInStock) {
@@ -49,33 +52,34 @@ export default function ProductDisplay({ loaderData }: Route.ComponentProps) {
     <div className="mx-auto max-w-6xl px-6 pt-6">
       <Card className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
         {/* Image Section */}
-        <div className="flex items-center justify-center bg-muted/50 rounded-l-lg h-[400px] md:h-full">
-          {productDto.images ? (
+        <div className="bg-muted/50 rounded-l-lg h-100 md:h-full overflow-hidden">
+          {productDto.imageUrl ? (
             <img
-              src={productDto.images}
+              src={productDto.imageUrl}
               alt={productDto.name}
-              className="max-h-full w-full object-contain p-4"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-muted-foreground">No image available</span>
+            <div className="flex h-full items-center justify-center">
+              <span className="text-muted-foreground">No image available</span>
+            </div>
           )}
         </div>
 
-        {/* Details Section */}
         <div className="flex flex-col gap-6 p-6">
           <CardHeader className="p-0">
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight">{productDto.name}</h1>
-              <p className="text-sm text-muted-foreground font-mono">
-                SKU: {productDto.sku}
-              </p>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {productDto.name}
+              </h1>
             </div>
           </CardHeader>
 
           <CardContent className="p-0 flex flex-col gap-6">
             <div className="flex items-baseline gap-2">
+              {/* Price - Using Rupee Symbol */}
               <span className="text-4xl font-bold text-primary">
-                ${productDto.price.toFixed(2)}
+                ₹{productDto.price.toFixed(2)}
               </span>
             </div>
 
@@ -94,7 +98,7 @@ export default function ProductDisplay({ loaderData }: Route.ComponentProps) {
                 )}
               </p>
               {productDto.description && (
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap wrap-break-word">
                   {productDto.description}
                 </p>
               )}
@@ -104,7 +108,6 @@ export default function ProductDisplay({ loaderData }: Route.ComponentProps) {
               <div className="space-y-4 pt-4 border-t">
                 <label className="text-sm font-semibold">Quantity</label>
                 <div className="flex items-center gap-4">
-                  {/* Quantity Selector */}
                   <div className="flex items-center border rounded-lg p-1 bg-background">
                     <Button
                       variant="ghost"
@@ -123,26 +126,28 @@ export default function ProductDisplay({ loaderData }: Route.ComponentProps) {
                       size="icon"
                       className="h-8 w-8"
                       onClick={handleIncrement}
-                      disabled={quantity >= productDto.countInStock || isSubmitting}
+                      disabled={
+                        quantity >= productDto.countInStock || isSubmitting
+                      }
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
 
-                  {/* Add to Cart Button */}
                   <fetcher.Form method="post" className="flex-1">
                     <input type="hidden" name="quantity" value={quantity} />
                     <Button
                       type="submit"
                       className="w-full transition-all"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isSuccess}
                       variant={isSuccess ? "outline" : "default"}
                     >
                       {isSubmitting ? (
                         "Adding..."
                       ) : isSuccess ? (
                         <>
-                          <Check className="mr-2 h-4 w-4 text-green-600" /> Added to Cart
+                          <Check className="mr-2 h-4 w-4 text-green-600" />{" "}
+                          Added to Cart
                         </>
                       ) : (
                         <>

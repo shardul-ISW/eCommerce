@@ -10,7 +10,7 @@ export interface BuyerProductResponseDto {
   price: number;
   countInStock: number;
   description: string | null;
-  images: string | null;
+  imageUrl: string | null;
 }
 
 export interface BuyerCartItemResponseDto {
@@ -20,7 +20,7 @@ export interface BuyerCartItemResponseDto {
   price: number;
   countInStock: number;
   description: string | null;
-  images: string | null;
+  imageUrl: string | null;
   countInCart: number;
 }
 

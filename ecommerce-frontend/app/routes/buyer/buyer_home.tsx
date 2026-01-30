@@ -1,47 +1,86 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import apiClient from "~/axios_instance";
 import type { BuyerProductResponseDto } from "~/types/ResponseDto";
 import type { Route } from "./+types/buyer_home";
 import { Link } from "react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 
 export async function clientLoader() {
   const response = await apiClient.get("/buyer/products");
-  const products: BuyerProductResponseDto[] = response.data; //eslint-disable-line
-  // console.log(products);
-  return { products };
+  const products: BuyerProductResponseDto[] = response.data;
+  
+  const sortedProducts = [...products].sort((a, b) => {
+    const aStock = a.countInStock > 0 ? 1 : 0;
+    const bStock = b.countInStock > 0 ? 1 : 0;
+    return bStock - aStock; // 1 (in stock) comes before 0 (out of stock)
+  });
+
+  return { products: sortedProducts };
 }
 
 export default function BuyerHomePage({ loaderData }: Route.ComponentProps) {
   const { products } = loaderData;
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="mx-auto max-w-7xl p-6">
+      <h1 className="text-3xl font-bold mb-8 tracking-tight">
+        Explore Products
+      </h1>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map((product) => (
           <Link
             key={product.id}
             to={`/buyer/products/${product.id}`}
-            className="focus:outline-none"
+            className="group outline-none"
           >
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="truncate">{product.name}</CardTitle>
-              </CardHeader>
+            <Card className="h-full overflow-hidden border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
+              {/* Image Thumbnail - Updated to imageUrl */}
+              <div className="aspect-square bg-muted/50 overflow-hidden border-b">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <span className="text-xs text-muted-foreground">
+                      No Image
+                    </span>
+                  </div>
+                )}
+              </div>
 
-              <CardContent className="space-y-2">
-                <div className="text-sm text-muted-foreground">
-                  SKU: {product.sku}
-                </div>
-
-                <div className="font-semibold">₹{product.price}</div>
-
-                <div className="text-sm">In stock: {product.countInStock}</div>
+              <CardContent className="p-4 space-y-3">
+                <h3 className="font-bold text-lg leading-tight truncate group-hover:text-primary transition-colors">
+                  {product.name}
+                </h3>
 
                 {product.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2 min-h-10">
                     {product.description}
                   </p>
                 )}
+
+                <div className="pt-2 flex items-center justify-between">
+                  {/* Price - Using Rupee Symbol */}
+                  <div className="text-xl font-black text-primary">
+                    ₹{product.price.toFixed(2)}
+                  </div>
+
+                  <div className="text-[10px] font-bold uppercase tracking-widest">
+                    {product.countInStock > 0 ? (
+                      <span className="text-green-600 bg-green-50 px-2 py-1 rounded">
+                        In Stock
+                      </span>
+                    ) : (
+                      <span className="text-red-600 bg-red-50 px-2 py-1 rounded">
+                        Out of Stock
+                      </span>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </Link>

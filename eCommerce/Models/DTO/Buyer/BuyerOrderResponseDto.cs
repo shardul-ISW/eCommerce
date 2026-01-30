@@ -1,4 +1,6 @@
-﻿namespace ECommerce.Models.DTO.Buyer
+﻿using ECommerce.Models.Domain.Entities;
+
+namespace ECommerce.Models.DTO.Buyer
 {
     public class BuyerOrderResponseDto
     {
@@ -9,5 +11,6 @@
         public string ProductName { get; set; }
         public string ProductSku { get; set; }
         public string DeliveryAddress { get; set; }
+        public OrderStatus orderStatus { get; set; }
     }
 }
