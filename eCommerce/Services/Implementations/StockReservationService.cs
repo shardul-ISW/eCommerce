@@ -8,6 +8,7 @@ namespace ECommerce.Services.Implementations
 {
     public class StockReservationService : IStockReservationService
     {
+        private const int MaxRetries = 3;
         private readonly ECommerceDbContext dbContext;
 
         public StockReservationService(ECommerceDbContext dbContext)
@@ -15,70 +16,90 @@ namespace ECommerce.Services.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task ReserveStockForCartItems(List<CartItem> cartItems)
-        {
-            foreach (var ci in cartItems)
+        public Task ReserveStockForCartItems(List<CartItem> cartItems) =>
+            ExecuteWithRetry(async () =>
             {
-                var product = await dbContext.Products.FindAsync(ci.ProductId)
-                    ?? throw new ProductNotFoundException(ci.ProductId);
+                foreach (var ci in cartItems)
+                {
+                    var product = await dbContext.Products.FindAsync(ci.ProductId)
+                        ?? throw new ProductNotFoundException(ci.ProductId);
 
-                int available = (product.CountInStock ?? 0) - product.ReservedCount;
+                    if (ci.Count > product.AvailableStock)
+                        throw new InsufficientStockException(product);
 
-                if (ci.Count > available)
-                    throw new InsufficientStockException(product);
+                    product.ReservedCount += ci.Count;
+                }
 
-                product.ReservedCount += ci.Count;
-            }
+                await dbContext.SaveChangesAsync();
+            });
 
-            await dbContext.SaveChangesAsync();
-        }
+        public Task ConfirmReservation(Guid transactionId) =>
+            ExecuteWithRetry(async () =>
+            {
+                var transaction = await FindTransaction(transactionId);
 
-        public async Task ConfirmReservation(Guid transactionId)
-        {
-            var transaction = await dbContext.Set<Transaction>()
+                if (transaction is null || transaction.Status != TransactionStatus.Processing)
+                    return;
+
+                var orders = await GetOrdersWithProducts(transactionId);
+
+                foreach (var order in orders)
+                {
+                    order.Product!.CountInStock -= order.Count;
+                    order.Product!.ReservedCount -= order.Count;
+                    order.Status = OrderStatus.WaitingForSellerToAccept;
+                }
+
+                transaction.Status = TransactionStatus.Success;
+                await dbContext.SaveChangesAsync();
+            });
+
+        public Task ReleaseReservation(Guid transactionId) =>
+            ExecuteWithRetry(async () =>
+            {
+                var transaction = await FindTransaction(transactionId);
+
+                if (transaction is null || transaction.Status == TransactionStatus.Success)
+                    return;
+
+                var orders = await GetOrdersWithProducts(transactionId);
+
+                foreach (var order in orders)
+                {
+                    order.Product!.ReservedCount -= order.Count;
+                    order.Status = OrderStatus.Cancelled;
+                }
+
+                transaction.Status = TransactionStatus.Expired;
+                await dbContext.SaveChangesAsync();
+            });
+
+        // ── Helpers ──────────────────────────────────────────────
+
+        private Task<Transaction?> FindTransaction(Guid transactionId) =>
+            dbContext.Set<Transaction>()
                 .FirstOrDefaultAsync(t => t.Id == transactionId);
 
-            if (transaction is null || transaction.Status != TransactionStatus.Processing)
-                return; // Idempotent — already handled
-
-            var orders = await dbContext.Orders
+        private Task<List<Order>> GetOrdersWithProducts(Guid transactionId) =>
+            dbContext.Orders
                 .Include(o => o.Product)
                 .Where(o => o.TransactionId == transactionId)
                 .ToListAsync();
 
-            foreach (var order in orders)
-            {
-                var product = order.Product!;
-                product.CountInStock -= order.Count;
-                product.ReservedCount -= order.Count;
-                order.Status = OrderStatus.WaitingForSellerToAccept;
-            }
-
-            transaction.Status = TransactionStatus.Success;
-            await dbContext.SaveChangesAsync();
-        }
-
-        public async Task ReleaseReservation(Guid transactionId)
+        private async Task ExecuteWithRetry(Func<Task> operation)
         {
-            var transaction = await dbContext.Set<Transaction>()
-                .FirstOrDefaultAsync(t => t.Id == transactionId);
-
-            if (transaction is null || transaction.Status == TransactionStatus.Success)
-                return; // Don't release already-confirmed payments
-
-            var orders = await dbContext.Orders
-                .Include(o => o.Product)
-                .Where(o => o.TransactionId == transactionId)
-                .ToListAsync();
-
-            foreach (var order in orders)
+            for (int attempt = 0; attempt <= MaxRetries; attempt++)
             {
-                order.Product!.ReservedCount -= order.Count;
-                order.Status = OrderStatus.Cancelled;
+                try
+                {
+                    await operation();
+                    return;
+                }
+                catch (DbUpdateConcurrencyException) when (attempt < MaxRetries)
+                {
+                    dbContext.ChangeTracker.Clear();
+                }
             }
-
-            transaction.Status = TransactionStatus.Expired;
-            await dbContext.SaveChangesAsync();
         }
     }
 }
