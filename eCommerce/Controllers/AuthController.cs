@@ -47,7 +47,7 @@ namespace ECommerce.Controllers
                 Name = Dto.Name,
                 PasswordHash = hashedPassword,
                 Email = Dto.Email,
-                Ban = Dto.Ban
+                BankAccountNumber = Dto.BankAccountNumber
             };
 
             await authRepository.CreateSellerAsync(newSeller);

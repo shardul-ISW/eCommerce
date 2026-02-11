@@ -8,7 +8,7 @@ namespace ECommerce.Models.Domain.Entities
         public required string Name { get; set; } = null!;
         public required string Email { get; set; } = null!;
         public required string PasswordHash { get; set; } = null!;
-        public required string Ban { get; set; } = null!;
+        public required string BankAccountNumber { get; set; } = null!;
         public ICollection<Product> Products { get; set;} = new List<Product>();
     }
 
@@ -22,7 +22,7 @@ namespace ECommerce.Models.Domain.Entities
                                   
             // Fields: Username, Ban, Password_Hash Constraint: Required
             builder.Property(seller => seller.Name).IsRequired();
-            builder.Property(seller => seller.Ban).IsRequired();
+            builder.Property(seller => seller.BankAccountNumber).IsRequired();
             builder.Property(seller => seller.PasswordHash).IsRequired();
 
         }
