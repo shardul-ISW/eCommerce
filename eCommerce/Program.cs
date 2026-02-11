@@ -1,13 +1,11 @@
 using ECommerce.Data;
 using ECommerce.Mappings;
-using ECommerce.Models.Domain.Exceptions;
 using ECommerce.Repositories.Implementations;
 using ECommerce.Repositories.Interfaces;
 using ECommerce.Services.Implementations;
 using ECommerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -80,7 +78,6 @@ builder.Services.AddTickerQ(options =>
         efOptions.SetDbContextPoolSize(34);
     });
 
-    // Dashboard — only in development
     if (builder.Environment.IsDevelopment())
     {
         options.AddDashboard(dashOpt =>
@@ -123,6 +120,9 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
@@ -150,38 +150,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-
-        context.Response.ContentType = "application/problem+json";
-
-        if (exception is DomainException domainException)
-        {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
-            await context.Response.WriteAsJsonAsync(new
-            {
-                title = "Business rule violation",
-                status = 400,
-                detail = domainException.Message
-            });
-        }
-
-        else
-        {
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-            await context.Response.WriteAsJsonAsync(new
-            {
-                title = "Internal server error",
-                status = 500
-            });
-        }
-    });
-});
+app.UseExceptionHandler();
 
 app.UseTickerQ();
 
