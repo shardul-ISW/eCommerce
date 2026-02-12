@@ -19,25 +19,25 @@ namespace ECommerce.Services.Implementations
             stripeClient = new StripeClient(configuration["Stripe:SecretKey"]);
         }
 
-        public async Task<string> CreateCheckoutSessionAsync(Transaction transaction, List<Order> orders)
+        public async Task<string> CreateCheckoutSessionAsync(Transaction transaction, List<CartItem> cartItems)
         {
             var lineItems = new List<SessionLineItemOptions>();
 
-            foreach (var order in orders)
+            foreach (var ci in cartItems)
             {
                 lineItems.Add(new SessionLineItemOptions
                 {
                     PriceData = new SessionLineItemPriceDataOptions
                     {
                         Currency = "inr",
-                        UnitAmountDecimal = order.Product!.Price * 100, // Stripe expects amount in paise
+                        UnitAmountDecimal = ci.Product.Price * 100, // Stripe expects amount in paise
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
-                            Name = order.Product.Name,
-                            Description = order.Product.Sku
+                            Name = ci.Product.Name,
+                            Description = ci.Product.Sku
                         }
                     },
-                    Quantity = order.Count
+                    Quantity = ci.Count
                 });
             }
 
