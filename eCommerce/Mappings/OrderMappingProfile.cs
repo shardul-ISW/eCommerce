@@ -25,7 +25,8 @@ namespace ECommerce.Mappings
                 .ForMember(d => d.ProductSku, o => o.MapFrom(s => s.Product.Sku))
                 .ForMember(d => d.ProductId, o => o.MapFrom(s => s.ProductId))
                 .ForMember(d => d.ProductCount, o => o.MapFrom(s => s.Count))
-                .ForMember(d => d.DeliveryAddress, o => o.MapFrom(s => s.Address));
+                .ForMember(d => d.DeliveryAddress, o => o.MapFrom(s => s.Address))
+                .ForMember(d => d.orderStatus, o => o.MapFrom(s => s.Status));
 
             CreateMap<UpdateOrderDto, Order>();
         }
