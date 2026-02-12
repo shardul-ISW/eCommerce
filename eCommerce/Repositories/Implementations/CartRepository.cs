@@ -51,9 +51,8 @@ namespace ECommerce.Repositories.Implementations
             {
                 await dbContext.SaveChangesAsync();
             }
-            catch (DbUpdateException ex)
+            catch (DbUpdateException)
             {
-                Console.WriteLine(ex.Message);
                 throw new InvalidCartItemException();
             }
         }

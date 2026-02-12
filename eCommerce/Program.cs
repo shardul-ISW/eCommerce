@@ -137,7 +137,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ECommerceDbContext>();
-    Console.WriteLine(db.Database.CanConnect() ? "Database connection successful" : "Database connection failed");
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation(db.Database.CanConnect() ? "Database connection successful" : "Database connection failed");
 }
 
 app.UseCors("AllowAll");

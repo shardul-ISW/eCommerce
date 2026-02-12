@@ -3,6 +3,7 @@ using ECommerce.Models.Domain.Entities;
 using ECommerce.Models.Domain.Exceptions;
 using ECommerce.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace ECommerce.Repositories.Implementations
 {
@@ -38,9 +39,9 @@ namespace ECommerce.Repositories.Implementations
                 await dbContext.AddAsync(p);
                 await dbContext.SaveChangesAsync();
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
+                when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: "IX_Products_Sku_SellerId" })
             {
-                Console.WriteLine(ex);
                 throw new DuplicateSkuException();
             }
         }
