@@ -11,6 +11,6 @@ namespace ECommerce.Models.DTO.Buyer
         public string ProductName { get; set; }
         public string ProductSku { get; set; }
         public string DeliveryAddress { get; set; }
-        public OrderStatus orderStatus { get; set; }
+        public OrderStatus OrderStatus { get; set; }
     }
 }
