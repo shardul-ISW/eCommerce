@@ -12,6 +12,7 @@ namespace ECommerce.Repositories.Implementations
         {
             this.dbContext = dbContext;
         }
+
         public async Task<Transaction> CreateTransactionForCartItems(List<CartItem> cartItems)
         {
             decimal amount = 0;
@@ -21,7 +22,7 @@ namespace ECommerce.Repositories.Implementations
                 if (ci.Product.Price is null)
                     throw new InvalidOperationException("Product price cannot be null.");
 
-                amount += (decimal)ci.Product.Price * ci.Count;
+                amount += ci.Product.Price.Value * ci.Count;
             }
 
             Transaction t = new()

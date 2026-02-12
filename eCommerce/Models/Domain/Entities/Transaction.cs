@@ -4,13 +4,14 @@ namespace ECommerce.Models.Domain.Entities
 {
     public enum TransactionStatus
     {
-        Success, Failed, Processing, Rollback, Expired
+        Success, Failed, Processing, Expired
     }
 
     public class Transaction : Entity
     {
-        public decimal? Amount { get; set; }
-        public TransactionStatus? Status { get; set; }
+        public decimal Amount { get; set; }
+        public TransactionStatus Status { get; set; }
+        public string? StripeSessionId { get; set; }
 
         /// <summary>
         /// Extracts the creation timestamp from the UUIDv7 primary key.
@@ -33,6 +34,9 @@ namespace ECommerce.Models.Domain.Entities
         {
             builder.Property(t => t.Amount).IsRequired();
             builder.Property(t => t.Status).HasConversion<string>().IsRequired();
+
+            // StripeSessionId — nullable, indexed for webhook lookups
+            builder.HasIndex(t => t.StripeSessionId).IsUnique();
 
             // CreatedAt is computed from Id — not a database column
             builder.Ignore(t => t.CreatedAt);
