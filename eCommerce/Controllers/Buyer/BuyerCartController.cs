@@ -56,6 +56,9 @@ namespace ECommerce.Controllers.Buyer
         [HttpPost("{productId}")]
         public async Task<IActionResult> AddOrUpdateCart([FromRoute] Guid productId, [FromQuery] int count)
         {
+            if (count <= 0)
+                return BadRequest("Count is non-positive.");
+
             await cartRepository.AddOrUpdateCart(buyerId: buyerId, productId: productId, count: count);
             return Ok();
         }
@@ -78,6 +81,10 @@ namespace ECommerce.Controllers.Buyer
         public async Task<IActionResult> PlaceOrders()
         {
             List<CartItem> cartItems = await cartRepository.GetBuyerCartItemsAsync(buyerId);
+
+            if (cartItems.Count == 0)
+                return BadRequest("Cart is empty.");
+
             Models.Domain.Entities.Buyer b = await cartRepository.GetBuyerById(buyerId);
 
             // 1. Reserve stock — throws InsufficientStockException if unavailable
