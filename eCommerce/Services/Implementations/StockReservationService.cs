@@ -47,7 +47,7 @@ namespace ECommerce.Services.Implementations
                 {
                     order.Product!.CountInStock -= order.Count;
                     order.Product!.ReservedCount -= order.Count;
-                    order.Status = OrderStatus.WaitingForSellerToAccept;
+                    order.Status = OrderStatus.InTransit;
                 }
 
                 transaction.Status = TransactionStatus.Success;
