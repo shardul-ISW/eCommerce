@@ -1,7 +1,12 @@
-import { redirect } from "react-router";
 import apiClient from "~/axios_instance";
 
 export async function clientAction() {
-  await apiClient.post(`buyer/cart`);
-  return redirect(`/buyer/orders`);
+  const response = await apiClient.post(`buyer/cart`);
+  const { checkoutUrl } = response.data as { checkoutUrl: string };
+
+  // Redirect to Stripe's hosted checkout page
+  window.location.href = checkoutUrl;
+
+  // Return null — the redirect above navigates away from the SPA
+  return null;
 }
