@@ -78,5 +78,21 @@ namespace ECommerce.Controllers.Seller
             return Created();
         }
 
+        [HttpPut("{productId}/stock")]
+        public async Task<IActionResult> SetStock([FromRoute] Guid productId, [FromBody] SetStockDto setStockDto)
+        {
+            Product? product = (await productsRepository.GetProductsBySellerIdAsync(productIds: [productId], sellerIds: [sellerId])).FirstOrDefault();
+
+            if (product is null) return NotFound();
+
+            if (setStockDto.CountInStock < product.ReservedCount)
+                throw new Models.Domain.Exceptions.StockBelowReservedException(product, setStockDto.CountInStock);
+
+            product.CountInStock = setStockDto.CountInStock;
+
+            await unitOfWork.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }

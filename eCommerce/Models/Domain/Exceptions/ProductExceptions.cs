@@ -14,4 +14,9 @@ namespace ECommerce.Models.Domain.Exceptions
         : DomainException($"Product {productId} not found.", StatusCodes.Status404NotFound)
     { }
 
+    public sealed class StockBelowReservedException(Product p, int requested)
+        : DomainException(
+            $"Cannot set stock to {requested} for {p.Name} — {p.ReservedCount} units are currently reserved.",
+            StatusCodes.Status422UnprocessableEntity)
+    { }
 }
