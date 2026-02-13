@@ -28,7 +28,6 @@ namespace ECommerce.Mappings
                 .ForMember(d => d.DeliveryAddress, o => o.MapFrom(s => s.Address))
                 .ForMember(d => d.OrderStatus, o => o.MapFrom(s => s.Status));
 
-            CreateMap<UpdateOrderDto, Order>();
         }
 
     }

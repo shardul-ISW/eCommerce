@@ -25,9 +25,28 @@ namespace ECommerce.Models.Domain.Entities
         public int Count { get; set; }
         public decimal Total { get; set; }
         public string? Address { get; set; }
-        public OrderStatus Status { get; set; }
+        public OrderStatus Status { get; private set; }
+
+        private static readonly Dictionary<OrderStatus, HashSet<OrderStatus>> ValidTransitions = new()
+        {
+            { OrderStatus.InTransit, [OrderStatus.Delivered] }
+        };
 
         private Order() { }
+
+        public void TransitionTo(OrderStatus newStatus)
+        {
+            if (!ValidTransitions.TryGetValue(Status, out var allowed) || !allowed.Contains(newStatus))
+                throw new Exceptions.InvalidOrderStatusTransitionException(Status, newStatus);
+
+            Status = newStatus;
+        }
+
+        /// <summary>System-level: payment confirmed, move to fulfillment.</summary>
+        internal void MarkInTransit() => Status = OrderStatus.InTransit;
+
+        /// <summary>System-level: payment failed or reservation expired.</summary>
+        internal void MarkCancelled() => Status = OrderStatus.Cancelled;
 
         public static Order Create(Buyer b, CartItem ci, Transaction t)
         {

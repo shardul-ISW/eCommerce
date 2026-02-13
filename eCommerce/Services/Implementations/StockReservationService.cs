@@ -47,7 +47,7 @@ namespace ECommerce.Services.Implementations
                 {
                     order.Product!.CountInStock -= order.Count;
                     order.Product!.ReservedCount -= order.Count;
-                    order.Status = OrderStatus.InTransit;
+                    order.MarkInTransit();
                 }
 
                 transaction.Status = TransactionStatus.Success;
@@ -67,7 +67,7 @@ namespace ECommerce.Services.Implementations
                 foreach (var order in orders)
                 {
                     order.Product!.ReservedCount -= order.Count;
-                    order.Status = OrderStatus.Cancelled;
+                    order.MarkCancelled();
                 }
 
                 transaction.Status = TransactionStatus.Expired;

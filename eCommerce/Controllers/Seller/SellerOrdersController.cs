@@ -60,7 +60,7 @@ namespace ECommerce.Controllers.Seller
 
             if (order is null) return NotFound();
 
-            mapper.Map(updateOrderDto, order);
+            order.TransitionTo(updateOrderDto.Status);
 
             await unitOfWork.SaveChangesAsync();
 
